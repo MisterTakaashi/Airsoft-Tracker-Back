@@ -14,9 +14,9 @@ io.on('connection', function (socket) {
     console.log("Utilisateur connecté !");
 
     socket.on('session create', () => {
-        console.log("Demande de creation de session");
+        let id = makeid();
 
-        let id = makeid()
+        console.log(`Demande de creation de session (${id})`);
         
         let session = {
             id: id,
@@ -25,7 +25,8 @@ io.on('connection', function (socket) {
 
         let player = {
             socket: socket, 
-            isAdmin: true
+            isAdmin: true,
+            isDebug: false
         }
 
         session.players.push(player);
@@ -33,10 +34,20 @@ io.on('connection', function (socket) {
         sessions.push(session);
 
         socket.emit('session create', id);
+
+        //DEBUG
+        let debugPlayer = {
+            socket: {id: 'DEBUGTESTPLAYER'}, 
+            isAdmin: false,
+            isDebug: true,
+            position: { lat: 43.7838413, lng: 1.3588779 }
+        }
+
+        session.players.push(debugPlayer);
     });
 
     socket.on('session join', (id) => {
-        console.log("Demande de join de session " + id);
+        console.log(`Demande de join de session (${id})`);
 
         let result = {
             error: false
@@ -49,15 +60,19 @@ io.on('connection', function (socket) {
             result.message = "Code de session introuvable...";
         }
 
+        socket.join('session ' + id);
+
         socket.emit('session join', result);
     });
 
     socket.on('session quit', (id) => {
-        console.log("Demande de quit de session " + id);
+        console.log(`Demande de quit de session (${id})`);
 
         let result = {
             error: false
         }
+
+        socket.leave('room ' + id);
 
         let session = sessions.find(x => x.id === id);
 
@@ -70,6 +85,35 @@ io.on('connection', function (socket) {
             return;
         
         session.players.splice(playerIndex, 1);
+    });
+
+    socket.on('player position', (position) => {
+        console.log("Reception de la position de l'utilisateur " + socket.id);
+        console.log(position);
+
+        let session = getPlayerSession(socket.id);
+        if (!session) {
+            console.log("Session du joueur introuvable");
+            return;
+        }
+
+        let player = session.players.find(x => x.socket.id === socket.id);
+
+        player.position = position;
+
+        let positionsToSend = session.players.map(x => {
+            let positionToSend = { id: x.socket.id, position: x.position };
+
+            if (x.isDebug) {
+                positionToSend.position.lat += 0.0001;
+                positionToSend.position.lng += 0.0001;
+            }
+
+            if (x.socket.id != socket.id)
+                return positionToSend;
+        }).filter(x => x != undefined);
+    
+        socket.emit('player position', positionsToSend);
     });
 
     socket.on('disconnect', () => {
@@ -99,4 +143,14 @@ function makeid() {
       text += possible.charAt(Math.floor(Math.random() * possible.length));
   
     return text;
+}
+
+function getPlayerSession(socketId) {
+    let session = sessions.find(x => {
+        let player = x.players.find(player => player.socket.id == socketId);
+
+        return player;
+    });
+
+    return session;
 }
