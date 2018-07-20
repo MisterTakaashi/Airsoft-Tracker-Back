@@ -2,7 +2,7 @@ var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
-var port = process.env.PORT || 8080;
+var port = process.env.PORT || 80;
 
 console.log("Ecoute sur le port " + port);
 server.listen(port);
@@ -62,6 +62,14 @@ io.on('connection', function (socket) {
             result.error = true;
             result.message = "Code de session introuvable...";
         }
+
+        let player = {
+            socket: socket, 
+            isAdmin: false,
+            isDebug: false
+        }
+
+        session.players.push(player);
 
         socket.join('session ' + id);
 
@@ -143,7 +151,7 @@ function makeid() {
     let text = "";
     let possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   
-    for (let i = 0; i < 10; i++)
+    for (let i = 0; i < 6; i++)
       text += possible.charAt(Math.floor(Math.random() * possible.length));
   
     return text;
