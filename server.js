@@ -2,7 +2,7 @@ var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
-let port = process.env.SERV_PORT || 80;
+var port = process.env.PORT || 8080;
 
 console.log("Ecoute sur le port " + port);
 server.listen(port);
