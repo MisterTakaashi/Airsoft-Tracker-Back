@@ -109,7 +109,8 @@ io.on('connection', function (socket) {
                 positionToSend.position.lng += 0.0001;
             }
 
-            if (x.socket.id != socket.id)
+            // si on ne veut pas le joueru qui vient d'envoyer les résultats
+            // if (x.socket.id != socket.id)
                 return positionToSend;
         }).filter(x => x != undefined);
     
