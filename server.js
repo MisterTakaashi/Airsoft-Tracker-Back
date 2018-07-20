@@ -8,7 +8,7 @@ console.log("Ecoute sur le port " + port);
 server.listen(port);
 
 app.get('/', function (req, res) {
-    res.sendfile(__dirname + '/index.html');
+    res.send("API of the Airsoft Taka Tracker");
 });
 
 let sessions = [];
