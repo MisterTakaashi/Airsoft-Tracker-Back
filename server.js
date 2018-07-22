@@ -1,6 +1,7 @@
 var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+var _ = require('lodash');
 
 var port = process.env.PORT || 8080;
 
@@ -128,6 +129,16 @@ io.on('connection', function (socket) {
         socket.emit('player position', positionsToSend);
     });
 
+    socket.on('player detail', (id) => {
+        let session = getPlayerSession(id);
+
+        let player = getPlayerInSession(id);
+
+        let playerFormatted = formatPlayerBeforSending(player);
+
+        socket.emit('player detail', playerFormatted);
+    });
+    
     socket.on('disconnect', () => {
         console.log("Utilisateur déconnecté");
 
@@ -165,4 +176,24 @@ function getPlayerSession(socketId) {
     });
 
     return session;
+}
+
+function getPlayerInSession(socketId) {
+    let session = getPlayerSession(socketId);
+
+    if (socketId == 'DEBUGTESTPLAYER')
+        return session.players.find(x => x.isDebug);
+
+    return session.players.find(
+        x => !x.isDebug && x.socket.id === socketId
+    );
+}
+
+function formatPlayerBeforSending(player) {
+    if (player.socket)
+        player.id = player.socket.id;
+    else if (player.isDebug)
+        player.id = 'DEBUGTESTPLAYER';
+
+    return _.omit(player, ['socket']);
 }
