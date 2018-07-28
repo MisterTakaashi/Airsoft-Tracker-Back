@@ -135,6 +135,18 @@ io.on('connection', function (socket) {
         }
     });
 
+    socket.on('team change', teamName => {
+        let session = getPlayerSession(socket.id);
+        let team = session.teams.find(x => x.name == teamName);
+        let player = getPlayerInSession(socket.id);
+
+        player.team = team;
+
+        console.log("Sent !");
+
+        io.to('session ' + session.id).emit('team change', formatPlayersBeforSending(session.players));
+    });
+
     socket.on('player position', (position) => {
         console.log("Reception de la position de l'utilisateur " + socket.id);
         console.log(position);
@@ -232,4 +244,8 @@ function formatPlayerBeforSending(player) {
         player.id = 'DEBUGTESTPLAYER';
 
     return _.omit(player, ['socket']);
+}
+
+function formatPlayersBeforSending(players) {
+    return players.map(x => formatPlayerBeforSending(x));
 }
