@@ -47,6 +47,9 @@ io.on('connection', function (socket) {
             position: { lat: 43.7838413, lng: 1.3588779 }
         }
 
+        socket.join('session ' + id);
+        console.log("Join session " + 'session ' + id);
+
         session.players.push(debugPlayer);
     });
 
@@ -84,7 +87,7 @@ io.on('connection', function (socket) {
             error: false
         }
 
-        socket.leave('room ' + id);
+        socket.leave('session ' + id);
 
         let session = sessions.find(x => x.id === id);
 
@@ -97,6 +100,39 @@ io.on('connection', function (socket) {
             return;
         
         session.players.splice(playerIndex, 1);
+    });
+
+    let possibleTeams = [
+        { name: "Bleue", color: "blue" },
+        { name: "Rouge", color: "red" },
+        { name: "Verte", color: "green" },
+        { name: "Violette", color: "violet" },
+        { name: "Jaune", color: "yellow" }
+    ]
+    socket.on('team create', () => {
+        let session = getPlayerSession(socket.id);
+        let done = false;
+
+        console.log("Demande création team !");
+
+        if (!session.teams){
+            session.teams = [];
+        }
+
+        for (let i = 0; i < possibleTeams.length; i++) {
+            let possibleTeam = possibleTeams[i];
+            
+            if (!session.teams.find(x => x.name == possibleTeam.name)) {
+                session.teams.push(_.clone(possibleTeam));
+                done = true;
+                break;
+            }
+        }
+
+        if (done) {
+            console.log("Equipe créée !" + session.id);
+            io.to('session ' + session.id).emit('team create', session.teams);
+        }
     });
 
     socket.on('player position', (position) => {
