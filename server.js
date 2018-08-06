@@ -22,6 +22,10 @@ io.on('connection', function (socket) {
 
         console.log(`Demande de creation de session (${id})`);
         
+        let result = {
+            error: false
+        }
+
         let session = {
             id: id,
             players: []
@@ -30,27 +34,32 @@ io.on('connection', function (socket) {
         let player = {
             socket: socket, 
             isAdmin: true,
-            isDebug: false
+            isDebug: false,
+            rank: ranks[ranks.length - 1]
         }
 
         session.players.push(player);
 
         sessions.push(session);
 
-        socket.emit('session create', id);
-
         //DEBUG
         let debugPlayer = {
             socket: {id: 'DEBUGTESTPLAYER'}, 
             isAdmin: false,
             isDebug: true,
-            position: { lat: 43.7838413, lng: 1.3588779 }
+            position: { lat: 43.7838413, lng: 1.3588779 },
+            rank: ranks[0]
         }
 
         socket.join('session ' + id);
         console.log("Join session " + 'session ' + id);
 
         session.players.push(debugPlayer);
+
+        result.id = id;
+        result.players = formatPlayersBeforSending(session.players);
+    
+        socket.emit('session create', result);
     });
 
     socket.on('session join', (id) => {
@@ -70,12 +79,15 @@ io.on('connection', function (socket) {
         let player = {
             socket: socket, 
             isAdmin: false,
-            isDebug: false
+            isDebug: false,
+            rank: ranks[0]
         }
 
         session.players.push(player);
 
         socket.join('session ' + id);
+
+        result.players = formatPlayersBeforSending(session.players);
 
         socket.emit('session join', result);
     });
@@ -133,6 +145,18 @@ io.on('connection', function (socket) {
             console.log("Equipe créée !" + session.id);
             io.to('session ' + session.id).emit('team create', session.teams);
         }
+    });
+
+    let ranks = [
+        { name: "2nd Private", order: 0 },
+        { name: "Private 1st", order: 1 },
+        { name: "Corporal", order: 2 },
+        { name: "Sergeant", order: 3 },
+        { name: "First Lieutenant", order: 4 },
+        { name: "General", order: 5 },
+    ]
+    socket.on('rank list', () => {
+        socket.emit('rank list', ranks);
     });
 
     socket.on('team change', teamName => {
