@@ -35,7 +35,8 @@ io.on('connection', function (socket) {
             socket: socket, 
             isAdmin: true,
             isDebug: false,
-            rank: ranks[ranks.length - 1]
+            rank: ranks[ranks.length - 1],
+            specialisation: specialisations[0]
         }
 
         session.players.push(player);
@@ -48,7 +49,8 @@ io.on('connection', function (socket) {
             isAdmin: false,
             isDebug: true,
             position: { lat: 43.7838413, lng: 1.3588779 },
-            rank: ranks[0]
+            rank: ranks[0],
+            specialisation: specialisations[0]
         }
 
         socket.join('session ' + id);
@@ -80,7 +82,8 @@ io.on('connection', function (socket) {
             socket: socket, 
             isAdmin: false,
             isDebug: false,
-            rank: ranks[0]
+            rank: ranks[0],
+            specialisation: specialisations[0]
         }
 
         session.players.push(player);
@@ -157,6 +160,35 @@ io.on('connection', function (socket) {
     ]
     socket.on('rank list', () => {
         socket.emit('rank list', ranks);
+    });
+
+    let specialisations = [
+        { name: "Infrantry", icon: "contact" },
+        { name: "Medic", icon: "medical" },
+        { name: "Reconnaissance", icon: "medical" },
+    ]
+    socket.on('specialisation list', () => {
+        socket.emit('specialisation list', specialisations);
+    });
+
+    socket.on('specialisation change', specialisationName => {
+        let session = getPlayerSession(socket.id);
+        let specialisation = specialisations.find(x => x.name == specialisationName);
+        let player = getPlayerInSession(socket.id);
+
+        player.specialisation = specialisation;
+
+        io.to('session ' + session.id).emit('specialisation change', formatPlayersBeforSending(session.players));
+    });
+
+    socket.on('rank change', rankOrder => {
+        let session = getPlayerSession(socket.id);
+        let rank = ranks.find(x => x.order == rankOrder);
+        let player = getPlayerInSession(socket.id);
+
+        player.rank = rank;
+
+        io.to('session ' + session.id).emit('rank change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('team change', teamName => {
