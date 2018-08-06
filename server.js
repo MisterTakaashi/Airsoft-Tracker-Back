@@ -171,34 +171,32 @@ io.on('connection', function (socket) {
         socket.emit('specialisation list', specialisations);
     });
 
-    socket.on('specialisation change', specialisationName => {
-        let session = getPlayerSession(socket.id);
-        let specialisation = specialisations.find(x => x.name == specialisationName);
-        let player = getPlayerInSession(socket.id);
+    socket.on('specialisation change', data => {
+        let session = getPlayerSession(data.id);
+        let specialisation = specialisations.find(x => x.name == data.specialisation);
+        let player = getPlayerInSession(data.id);
 
         player.specialisation = specialisation;
 
         io.to('session ' + session.id).emit('specialisation change', formatPlayersBeforSending(session.players));
     });
 
-    socket.on('rank change', rankOrder => {
-        let session = getPlayerSession(socket.id);
-        let rank = ranks.find(x => x.order == rankOrder);
-        let player = getPlayerInSession(socket.id);
+    socket.on('rank change', data => {
+        let session = getPlayerSession(data.id);
+        let rank = ranks.find(x => x.order == data.rank);
+        let player = getPlayerInSession(data.id);
 
         player.rank = rank;
 
         io.to('session ' + session.id).emit('rank change', formatPlayersBeforSending(session.players));
     });
 
-    socket.on('team change', teamName => {
-        let session = getPlayerSession(socket.id);
-        let team = session.teams.find(x => x.name == teamName);
-        let player = getPlayerInSession(socket.id);
+    socket.on('team change', data => {
+        let session = getPlayerSession(data.id);
+        let team = session.teams.find(x => x.name == data.team);
+        let player = getPlayerInSession(data.id);
 
         player.team = team;
-
-        console.log("Sent !");
 
         io.to('session ' + session.id).emit('team change', formatPlayersBeforSending(session.players));
     });
@@ -287,6 +285,8 @@ function getPlayerInSession(socketId) {
 
     if (socketId == 'DEBUGTESTPLAYER')
         return session.players.find(x => x.isDebug);
+
+    console.log(socketId);
 
     return session.players.find(
         x => !x.isDebug && x.socket.id === socketId
