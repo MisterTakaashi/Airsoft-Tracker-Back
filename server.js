@@ -28,7 +28,8 @@ io.on('connection', function (socket) {
 
         let session = {
             id: id,
-            players: []
+            players: [],
+            markers: []
         }
 
         let player = {
@@ -163,9 +164,9 @@ io.on('connection', function (socket) {
     });
 
     let specialisations = [
-        { name: "Infrantry", icon: "contact" },
-        { name: "Medic", icon: "medical" },
-        { name: "Reconnaissance", icon: "medical" },
+        { name: "Infrantry", icon: "contact", image: "infrantry" },
+        { name: "Medic", icon: "medical", image: "infrantry" },
+        { name: "Reconnaissance", icon: "medical", image: "infrantry" },
     ]
     socket.on('specialisation list', () => {
         socket.emit('specialisation list', specialisations);
@@ -241,6 +242,12 @@ io.on('connection', function (socket) {
         socket.emit('player detail', playerFormatted);
     });
     
+    socket.on('marker create', marker => {
+        let session = getPlayerSession(socket.id);
+        session.markers.push(marker);
+        io.to('session ' + session.id).emit('marker create', session.markers);
+    });
+
     socket.on('disconnect', () => {
         console.log("Utilisateur déconnecté");
 
