@@ -62,7 +62,7 @@ io.on('connection', function (socket) {
         socket.join('session ' + id);
         console.log("Join session " + 'session ' + id);
 
-        session.players.push(debugPlayer);
+        // session.players.push(debugPlayer);
 
         result.id = id;
         result.players = formatPlayersBeforSending(session.players);
