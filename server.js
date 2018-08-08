@@ -13,6 +13,7 @@ app.get('/', function (req, res) {
 });
 
 let sessions = [];
+let names = [];
 
 io.on('connection', function (socket) {
     console.log("Utilisateur connecté !");
@@ -32,12 +33,15 @@ io.on('connection', function (socket) {
             markers: []
         }
 
+        let name = names.find(x => x.id == socket.id).username;
+
         let player = {
             socket: socket, 
             isAdmin: true,
             isDebug: false,
             rank: ranks[ranks.length - 1],
-            specialisation: specialisations[0]
+            specialisation: specialisations[0],
+            username: name
         }
 
         session.players.push(player);
@@ -51,7 +55,8 @@ io.on('connection', function (socket) {
             isDebug: true,
             position: { lat: 43.7838413, lng: 1.3588779 },
             rank: ranks[0],
-            specialisation: specialisations[0]
+            specialisation: specialisations[0],
+            username: "Test Player"
         }
 
         socket.join('session ' + id);
@@ -79,12 +84,15 @@ io.on('connection', function (socket) {
             result.message = "Code de session introuvable...";
         }
 
+        let name = names.find(x => x.id == socket.id).username;
+
         let player = {
             socket: socket, 
             isAdmin: false,
             isDebug: false,
             rank: ranks[0],
-            specialisation: specialisations[0]
+            specialisation: specialisations[0],
+            username: name
         }
 
         session.players.push(player);
@@ -172,6 +180,12 @@ io.on('connection', function (socket) {
         socket.emit('specialisation list', specialisations);
     });
 
+    socket.on('username choose', data => {
+        names.push(
+            { id: socket.id, username: data }
+        );
+    });
+
     socket.on('specialisation change', data => {
         let session = getPlayerSession(data.id);
         let specialisation = specialisations.find(x => x.name == data.specialisation);
@@ -200,6 +214,15 @@ io.on('connection', function (socket) {
         player.team = team;
 
         io.to('session ' + session.id).emit('team change', formatPlayersBeforSending(session.players));
+    });
+
+    socket.on('squad change', data => {
+        let session = getPlayerSession(data.id);
+        let player = getPlayerInSession(data.id);
+
+        player.squad = data.squad;
+
+        io.to('session ' + session.id).emit('squad change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('player position', (position) => {
