@@ -35,12 +35,15 @@ io.on('connection', function (socket) {
 
         let name = names.find(x => x.id == socket.id).username;
 
+        session.teams = [possibleTeams[0]];
+
         let player = {
             socket: socket, 
             isAdmin: true,
             isDebug: false,
             rank: ranks[ranks.length - 1],
             specialisation: specialisations[0],
+            team: possibleTeams[0],
             username: name
         }
 
@@ -68,6 +71,8 @@ io.on('connection', function (socket) {
         result.players = formatPlayersBeforSending(session.players);
     
         socket.emit('session create', result);
+
+        io.to('session ' + session.id).emit('players change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('session join', (id) => {
@@ -102,6 +107,7 @@ io.on('connection', function (socket) {
         result.players = formatPlayersBeforSending(session.players);
 
         socket.emit('session join', result);
+        io.to('session ' + session.id).emit('players change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('session quit', (id) => {
@@ -127,6 +133,7 @@ io.on('connection', function (socket) {
     });
 
     let possibleTeams = [
+        { name: "Administrateur", color: "red", hidden: true },
         { name: "Bleue", color: "blue" },
         { name: "Rouge", color: "red" },
         { name: "Verte", color: "green" },
@@ -193,7 +200,7 @@ io.on('connection', function (socket) {
 
         player.specialisation = specialisation;
 
-        io.to('session ' + session.id).emit('specialisation change', formatPlayersBeforSending(session.players));
+        io.to('session ' + session.id).emit('players change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('rank change', data => {
@@ -203,7 +210,7 @@ io.on('connection', function (socket) {
 
         player.rank = rank;
 
-        io.to('session ' + session.id).emit('rank change', formatPlayersBeforSending(session.players));
+        io.to('session ' + session.id).emit('players change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('team change', data => {
@@ -213,7 +220,7 @@ io.on('connection', function (socket) {
 
         player.team = team;
 
-        io.to('session ' + session.id).emit('team change', formatPlayersBeforSending(session.players));
+        io.to('session ' + session.id).emit('players change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('squad change', data => {
@@ -222,7 +229,7 @@ io.on('connection', function (socket) {
 
         player.squad = data.squad;
 
-        io.to('session ' + session.id).emit('squad change', formatPlayersBeforSending(session.players));
+        io.to('session ' + session.id).emit('players change', formatPlayersBeforSending(session.players));
     });
 
     socket.on('player position', (position) => {
