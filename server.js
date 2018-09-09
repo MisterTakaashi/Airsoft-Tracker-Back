@@ -87,6 +87,7 @@ io.on('connection', function (socket) {
         if (!session) {
             result.error = true;
             result.message = "Code de session introuvable...";
+            return;
         }
 
         let name = names.find(x => x.id == socket.id).username;
@@ -108,6 +109,7 @@ io.on('connection', function (socket) {
 
         socket.emit('session join', result);
         io.to('session ' + session.id).emit('players change', formatPlayersBeforSending(session.players));
+        io.to('session ' + session.id).emit('team create', session.teams);
     });
 
     socket.on('session quit', (id) => {
