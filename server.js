@@ -182,6 +182,8 @@ io.on('connection', function (socket) {
         { name: "Infrantry", icon: "contact", image: "infrantry" },
         { name: "Medic", icon: "medical", image: "infrantry" },
         { name: "Reconnaissance", icon: "medical", image: "infrantry" },
+        { name: "Radio Op", icon: "medical", image: "infrantry" },
+        { name: "Leader", icon: "medical", image: "infrantry" },
     ]
     socket.on('specialisation list', () => {
         socket.emit('specialisation list', specialisations);
@@ -274,6 +276,16 @@ io.on('connection', function (socket) {
     
     socket.on('marker create', marker => {
         let session = getPlayerSession(socket.id);
+
+        session.markers.forEach((marker, index) => {
+            if (marker.enemy) {
+                if (new Date(marker.date.getTime() + 10000) < new Date()) {
+                  session.markers.splice(index, 1);
+                }
+            }
+        });
+
+        marker.date = new Date();
         session.markers.push(marker);
         io.to('session ' + session.id).emit('marker create', session.markers);
     });
