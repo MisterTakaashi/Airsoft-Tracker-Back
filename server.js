@@ -290,6 +290,13 @@ io.on('connection', function (socket) {
         io.to('session ' + session.id).emit('marker create', session.markers);
     });
 
+    socket.on('marker remove', marker => {
+        let session = getPlayerSession(socket.id);
+
+        let index = session.markers.findIndex(x => x.position == marker.position);
+        session.markers.splice(index, 1);
+    });
+
     socket.on('disconnect', () => {
         console.log("Utilisateur déconnecté");
 
