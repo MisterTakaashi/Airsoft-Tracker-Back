@@ -30,7 +30,8 @@ io.on('connection', function (socket) {
         let session = {
             id: id,
             players: [],
-            markers: []
+            markers: [],
+            missions: []
         }
 
         let name = names.find(x => x.id == socket.id).username;
@@ -162,10 +163,10 @@ io.on('connection', function (socket) {
             }
         }
 
-        if (done) {
+        // if (done) {
             console.log("Equipe créée !" + session.id);
             io.to('session ' + session.id).emit('team create', session.teams);
-        }
+        // }
     });
 
     let ranks = [
@@ -281,7 +282,7 @@ io.on('connection', function (socket) {
 
         session.markers.forEach((marker, index) => {
             if (marker.enemy) {
-                if (new Date(marker.date.getTime() + 10000) < new Date()) {
+                if (new Date(marker.date.getTime() + 5 * 60000) < new Date()) {
                   session.markers.splice(index, 1);
                 }
             }
@@ -290,6 +291,21 @@ io.on('connection', function (socket) {
         marker.date = new Date();
         session.markers.push(marker);
         io.to('session ' + session.id).emit('marker create', session.markers);
+    });
+
+    socket.on('mission create', mission => {
+        let session = getPlayerSession(socket.id);
+
+        session.missions.push(mission);
+
+        io.to('session ' + session.id).emit('mission create', session.missions);
+    })
+
+    socket.on('mission remove', mission => {
+        let session = getPlayerSession(socket.id);
+
+        let index = session.missions.findIndex(x => x.position == mission.position);
+        session.missions.splice(index, 1);
     });
 
     socket.on('marker remove', marker => {
