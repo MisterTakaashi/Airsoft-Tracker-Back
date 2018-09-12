@@ -34,7 +34,9 @@ io.on('connection', function (socket) {
             missions: []
         }
 
-        let name = names.find(x => x.id == socket.id).username;
+        let mysocket = names.find(x => x.id == socket.id);
+        if (!mysocket) return;
+        let name = mysocket.username;
 
         session.teams = [possibleTeams[0]];
 
